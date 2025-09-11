@@ -1,0 +1,240 @@
+﻿@model List<DocumentSharingWebApp.Models.Report>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Quản lý báo lỗi";
+    string search = ViewBag?.Search as string ?? "";
+}
+
+<style>
+    /* Khoảng cách & look cho cột thao tác */
+    .table-actions {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: .5rem;
+    }
+
+        .table-actions .btn {
+            margin: 0 .15rem; /* fallback nếu browser không hỗ trợ gap */
+            border-radius: 10px;
+        }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="m-0">🚩 Quản lý báo lỗi</h2>
+</div>
+
+<form method="get" asp-action="ManageReports" class="row g-2 mb-3">
+    <div class="col-md-6">
+        <input type="text" name="search" value="@search" class="form-control"
+               placeholder="Tìm theo nội dung lý do, người báo, tiêu đề tài liệu..." />
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Tìm</button>
+    </div>
+</form>
+
+<table class="table table-hover align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th style="width:90px" class="text-center">ID</th>
+            <th>Tài liệu</th>
+            <th style="width:180px">Người báo</th>
+            <th>Lý do</th>
+            <th style="width:180px" class="text-center">Thời gian</th>
+            <th style="width:140px" class="text-center">Trạng thái</th>
+            <th style="width:220px" class="text-center">Thao tác</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model?.Any() == true)
+        {
+            foreach (var r in Model)
+            {
+                var docTitle = r.Document?.Title ?? "(tài liệu đã xoá?)";
+                var reporter = r.Reporter?.Username ?? "—";
+                var status = r.Status ?? "";
+                var docId = r.DocumentId; // nếu không có property này, có thể dùng: r.Document?.DocumentId
+
+                <tr>
+                    <td class="text-center">@r.ReportId</td>
+                    <td class="text-break">@docTitle</td>
+                    <td>@reporter</td>
+                    <td class="text-break">@r.Reason</td>
+                    <td class="text-center">@r.ReportDate?.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td class="text-center">
+                        @if (string.Equals(status, "Resolved", StringComparison.OrdinalIgnoreCase))
+                        {
+                            <span class="badge bg-success">Resolved</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning text-dark">@status</span>
+                        }
+                    </td>
+                    <td class="text-center">
+                        <div class="table-actions">
+                            <!-- Xem tài liệu -->
+                            <a asp-action="ViewDocument" asp-controller="Admin" asp-route-id="@docId"
+                               class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" data-bs-title="Xem tài liệu">
+                                <i class="bi bi-eye"></i>
+                            </a>
+
+                            <!-- Đánh dấu đã xử lý (POST) -->
+                            @if (!string.Equals(status, "Resolved", StringComparison.OrdinalIgnoreCase))
+                            {
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-success"
+                                        data-bs-target="#resolveReportModal"
+                                        data-bs-toggle="modal"
+                                        data-id="@r.ReportId"
+                                        data-doc="@docTitle"
+                                        data-reporter="@reporter"
+                                        data-reason="@r.Reason"
+                                        data-time="@r.ReportDate?.ToString("dd/MM/yyyy HH:mm")">
+                                    <i class="bi bi-check2-circle"></i>
+                                </button>
+                            }
+
+                            <!-- Xoá báo lỗi (POST) -->
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-danger"
+                                    data-bs-target="#deleteReportModal"
+                                    data-bs-toggle="modal"
+                                    data-id="@r.ReportId"
+                                    data-doc="@docTitle"
+                                    data-reporter="@reporter"
+                                    data-reason="@r.Reason"
+                                    data-time="@r.ReportDate?.ToString("dd/MM/yyyy HH:mm")">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr><td colspan="7" class="text-center text-muted">Không có báo lỗi.</td></tr>
+        }
+    </tbody>
+</table>
+
+@* Modal: Đánh dấu đã xử lý *@
+<div class="modal fade" id="resolveReportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title"><i class="bi bi-check2-circle text-success me-1"></i> Đánh dấu đã xử lý</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <div class="small text-muted mb-2">Bạn sắp đánh dấu đã xử lý báo lỗi:</div>
+                <ul class="list-unstyled small mb-2">
+                    <li><strong>ID:</strong> <span id="res-id">—</span></li>
+                    <li><strong>Tài liệu:</strong> <span id="res-doc">—</span></li>
+                    <li><strong>Người báo:</strong> <span id="res-reporter">—</span></li>
+                    <li><strong>Thời gian:</strong> <span id="res-time">—</span></li>
+                </ul>
+                <div class="border rounded p-2 bg-light small" id="res-reason">—</div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Huỷ</button>
+                <form id="res-form" asp-action="ResolveReport" asp-controller="Admin" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="res-input-id" />
+                    <button type="submit" class="btn btn-success"><i class="bi bi-check2"></i> Đã xử lý</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Modal: Xoá báo lỗi *@
+<div class="modal fade" id="deleteReportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title"><i class="bi bi-trash text-danger me-1"></i> Xoá báo lỗi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <div class="small text-muted mb-2">Bạn sắp xoá báo lỗi:</div>
+                <ul class="list-unstyled small mb-2">
+                    <li><strong>ID:</strong> <span id="del-id">—</span></li>
+                    <li><strong>Tài liệu:</strong> <span id="del-doc">—</span></li>
+                    <li><strong>Người báo:</strong> <span id="del-reporter">—</span></li>
+                    <li><strong>Thời gian:</strong> <span id="del-time">—</span></li>
+                </ul>
+                <div class="border rounded p-2 bg-light small" id="del-reason">—</div>
+                <div class="mt-2 text-danger small">Hành động này không thể hoàn tác.</div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Huỷ</button>
+                <form id="del-form" asp-action="DeleteReport" asp-controller="Admin" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="del-input-id" />
+                    <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Xoá</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+          // Tooltip cho nút xem tài liệu
+          const tEls = Array.prototype.slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+          tEls.forEach(function (el) { new bootstrap.Tooltip(el) });
+
+          // Modal RESOLVE
+          const resModal = document.getElementById('resolveReportModal');
+          if (resModal){
+            resModal.addEventListener('show.bs.modal', (e) => {
+              const btn = e.relatedTarget;
+              if (!btn) return;
+              const id = btn.getAttribute('data-id') || '';
+              const doc = btn.getAttribute('data-doc') || '—';
+              const reporter = btn.getAttribute('data-reporter') || '—';
+              const reason = btn.getAttribute('data-reason') || '—';
+              const time = btn.getAttribute('data-time') || '—';
+
+              resModal.querySelector('#res-id').textContent = id;
+              resModal.querySelector('#res-doc').textContent = doc;
+              resModal.querySelector('#res-reporter').textContent = reporter;
+              resModal.querySelector('#res-time').textContent = time;
+              resModal.querySelector('#res-reason').textContent = reason;
+
+              const hidden = resModal.querySelector('#res-input-id');
+              if (hidden) hidden.value = id;
+            });
+          }
+
+          // Modal DELETE
+          const delModal = document.getElementById('deleteReportModal');
+          if (delModal){
+            delModal.addEventListener('show.bs.modal', (e) => {
+              const btn = e.relatedTarget;
+              if (!btn) return;
+              const id = btn.getAttribute('data-id') || '';
+              const doc = btn.getAttribute('data-doc') || '—';
+              const reporter = btn.getAttribute('data-reporter') || '—';
+              const reason = btn.getAttribute('data-reason') || '—';
+              const time = btn.getAttribute('data-time') || '—';
+
+              delModal.querySelector('#del-id').textContent = id;
+              delModal.querySelector('#del-doc').textContent = doc;
+              delModal.querySelector('#del-reporter').textContent = reporter;
+              delModal.querySelector('#del-time').textContent = time;
+              delModal.querySelector('#del-reason').textContent = reason;
+
+              const hidden = delModal.querySelector('#del-input-id');
+              if (hidden) hidden.value = id;
+            });
+          }
+        })();
+    </script>
+}

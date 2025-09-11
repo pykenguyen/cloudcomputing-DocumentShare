@@ -1,0 +1,78 @@
+﻿@model List<DocumentSharingWebApp.Models.Transaction>
+@{
+    ViewBag.Title = "Ví xu";
+    var balance = (decimal)(ViewBag.Balance ?? 0m);
+}
+<div class="page-title"><i class="bi bi-wallet2"></i><h3 class="mb-0">Ví xu</h3></div>
+
+@if (TempData["WalletOk"] != null)
+{
+    <div class="alert alert-success">@TempData["WalletOk"]</div>
+}
+@if (TempData["WalletError"] != null)
+{
+    <div class="alert alert-danger">@TempData["WalletError"]</div>
+}
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Số dư hiện tại</h5>
+                <div class="display-6 fw-bold">@balance.ToString("0") xu</div>
+            </div>
+        </div>
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5 class="card-title">Nạp xu</h5>
+                <form asp-action="Recharge" method="post" class="row g-2">
+                    @Html.AntiForgeryToken()
+                    <div class="col-12">
+                        <label for="amount" class="form-label">Số xu muốn nạp</label>
+                        <input id="amount" name="amount" type="number" min="1" step="1" class="form-control" required />
+                    </div>
+                    <div class="col-12">
+                        <label for="note" class="form-label">Ghi chú (tuỳ chọn)</label>
+                        <input id="note" name="note" class="form-control" />
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary w-100">Nạp</button>
+                    </div>
+                </form>
+                <small class="text-muted d-block mt-2">* Demo: nạp xu trực tiếp (chưa tích hợp cổng thanh toán).</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Lịch sử giao dịch</h5>
+                @if (Model != null && Model.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead><tr><th>Thời gian</th><th>Loại</th><th class="text-end">Số xu</th><th>Ghi chú</th></tr></thead>
+                            <tbody>
+                                @foreach (var t in Model)
+                                {
+                                    var sign = t.TransactionType?.Equals("Recharge", StringComparison.OrdinalIgnoreCase) == true ? "+" : "-";
+                                    <tr>
+                                        <td>@t.TransactionDate?.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>@t.TransactionType</td>
+                                        <td class="text-end">@sign@t.Amount.ToString("0")</td>
+                                        <td>@t.Description</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="empty">Chưa có giao dịch.</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,303 @@
+﻿/* ===== DocShare UI — Clean, Compact, Consistent ===== */
+:root {
+    --bg: #f7f7fb;
+    --surface: #ffffff;
+    --text: #0f172a;
+    --muted: #64748b;
+    --line: #eef1f6;
+    --primary: #2563eb;
+    --primary-600: #1e40af;
+    --success: #16a34a;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --shadow: 0 8px 24px rgba(2,6,23,.06), 0 2px 8px rgba(2,6,23,.05);
+    --radius: 14px;
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5 {
+    letter-spacing: .2px;
+}
+
+.small, .text-muted {
+    color: var(--muted) !important;
+}
+
+.section {
+    padding: 18px 0;
+}
+
+.container .card {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    background: var(--surface);
+}
+
+.card {
+    overflow: hidden;
+}
+
+.card-header {
+    background: transparent;
+    border-bottom: 1px dashed var(--line);
+}
+
+/* Navbar */
+.navbar .nav-link, .navbar .btn {
+    border-radius: 10px;
+}
+
+.navbar .btn {
+    padding: .45rem .8rem;
+}
+
+.search-box input {
+    height: 42px;
+    border-radius: 12px;
+}
+
+.search-box button {
+    height: 42px;
+    border-radius: 12px;
+}
+
+/* Form & Buttons */
+.form-control, .form-select {
+    border: 1px solid #e7eaf2;
+    border-radius: 12px;
+    background: #fff;
+}
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 .2rem rgba(37,99,235,.12);
+    }
+
+.btn {
+    border-radius: 12px;
+}
+
+.btn-primary {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+    .btn-primary:hover {
+        background: var(--primary-600);
+        border-color: var(--primary-600);
+    }
+
+.btn-outline-primary {
+    color: var(--primary);
+    border-color: rgba(37,99,235,.35);
+}
+
+    .btn-outline-primary:hover {
+        background: rgba(37,99,235,.08);
+        border-color: var(--primary);
+    }
+
+.btn-success {
+    background: var(--success);
+    border-color: var(--success);
+}
+
+.btn-danger {
+    background: var(--danger);
+    border-color: var(--danger);
+}
+
+/* Chips & badges */
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .38rem .7rem;
+    border-radius: 999px;
+    background: #f3f6ff;
+    color: #1e3a8a;
+    border: 1px solid #e2e8ff;
+    transition: .16s;
+    margin: .25rem .5rem .25rem 0;
+}
+
+    .chip:hover {
+        background: #e9efff;
+        text-decoration: none;
+    }
+
+.badge {
+    border-radius: 999px;
+    padding: .32rem .6rem;
+    font-weight: 600;
+}
+
+.badge-free {
+    background: rgba(22,163,74,.12);
+    color: #166534;
+}
+
+.badge-paid {
+    background: rgba(245,158,11,.16);
+    color: #92400e;
+}
+
+.badge-ghost {
+    background: #f7f8fc;
+    color: #334155;
+    border: 1px solid var(--line);
+}
+
+/* Cards */
+.card-hover {
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+    .card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(2,6,23,.08), 0 6px 12px rgba(2,6,23,.06);
+    }
+
+.doc-card .card-img-top {
+    height: 150px;
+    object-fit: cover;
+}
+
+.doc-card .title {
+    font-weight: 600;
+}
+
+.doc-card .card-footer {
+    border-top: 1px dashed var(--line);
+    background: #fff;
+}
+
+/* Utilities */
+.truncate-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.empty {
+    padding: 32px;
+    text-align: center;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+}
+
+.list-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.thumb-sm {
+    width: 118px;
+    height: 78px;
+    object-fit: cover;
+    border-radius: 10px;
+    background: #f5f6fb;
+    border: 1px solid var(--line);
+}
+
+/* ===== Admin Layout (không cần AdminLTE) ===== */
+.app-wrapper {
+    min-height: 100vh;
+    display: flex;
+}
+
+.app-sidebar {
+    width: 260px;
+    background: #0f172a;
+    color: #e2e8f0;
+    display: flex;
+    flex-direction: column;
+}
+
+    .app-sidebar a.nav-link {
+        color: #e2e8f0;
+        border-radius: 10px;
+        padding: .55rem .75rem;
+    }
+
+        .app-sidebar a.nav-link:hover {
+            background: rgba(255,255,255,.06);
+        }
+
+.app-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-topbar {
+    background: #fff;
+    border-bottom: 1px solid var(--line);
+}
+
+.app-content {
+    flex: 1;
+    padding: 16px;
+}
+
+.app-footer {
+    background: #fff;
+    border-top: 1px solid var(--line);
+    padding: 12px;
+    text-align: center;
+    color: var(--muted);
+}
+
+@media (max-width:992px) {
+    .app-sidebar {
+        position: fixed;
+        z-index: 1040;
+        left: -280px;
+        top: 0;
+        bottom: 0;
+        transition: left .2s ease;
+    }
+
+        .app-sidebar.open {
+            left: 0;
+        }
+
+    .app-content {
+        padding: 16px;
+    }
+}
+/* Spacing cho cột thao tác */
+.table-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: .5rem; /* khoảng cách giữa các nút */
+}
+
+    .table-actions .btn {
+        margin: 0 .15rem; /* phòng khi browser không support gap trong flex */
+        border-radius: 10px;
+    }

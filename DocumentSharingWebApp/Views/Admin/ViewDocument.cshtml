@@ -1,0 +1,29 @@
+﻿@model DocumentSharingWebApp.Models.Document
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Chi tiết tài liệu";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">@Model.Title</h2>
+    <div class="btn-group">
+        <a asp-action="EditFile" asp-route-id="@Model.DocumentId" class="btn btn-warning">
+            ✏️ Sửa tệp & thông tin
+        </a>
+        <a asp-action="ManageDocuments" class="btn btn-outline-secondary">← Quay lại danh sách</a>
+    </div>
+</div>
+
+@if (TempData["Ok"] != null)
+{
+    <div class="alert alert-success">@TempData["Ok"]</div>
+}
+
+<p><strong>Người đăng:</strong> @(Model.IsGuestUpload ? (Model.GuestName ?? "Khách") : (Model.Uploader?.Username ?? "—"))</p>
+<p><strong>Ngày đăng:</strong> @Model.UploadDate?.ToString("dd/MM/yyyy HH:mm")</p>
+<p><strong>Mô tả:</strong> @Model.Description</p>
+<p>
+    <strong>File:</strong>
+    <a href="@Url.Content("~/uploads/" + Model.FilePath)" target="_blank">Tải về</a>
+    <small class="text-muted ms-2">(@Model.FileName)</small>
+</p>

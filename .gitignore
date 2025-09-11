@@ -1,0 +1,44 @@
+# OS rác
+Thumbs.db
+.DS_Store
+
+# Editor/IDE
+.vscode/
+*.code-workspace
+.idea/
+
+# Log & tạm
+*.log
+*.tmp
+*.swp
+
+# Node / Front-end
+node_modules/
+dist/
+build/
+.next/
+.out/
+npm-debug.log*
+yarn-error.log*
+
+# PHP / Laravel
+/vendor/
+public/storage
+storage/*.key
+/storage/logs/
+bootstrap/cache/
+.env
+.env.*
+
+# .NET / Visual Studio
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.sln.docstates
+
+# Python (nếu có)
+__pycache__/
+*.pyc
+.venv/

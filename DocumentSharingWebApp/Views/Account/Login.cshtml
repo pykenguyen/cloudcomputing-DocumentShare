@@ -1,0 +1,37 @@
+﻿@model DocumentSharingWebApp.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "Đăng nhập";
+}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card mt-4">
+            <div class="card-header"><h5 class="mb-0 text-center">Đăng nhập</h5></div>
+            <div class="card-body">
+                <form asp-action="Login" method="post" novalidate>
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="ReturnUrl" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <div class="mb-3">
+                        <label asp-for="Identifier" class="form-label">Tên đăng nhập hoặc Email</label>
+                        <input asp-for="Identifier" class="form-control" autocomplete="username" />
+                        <span asp-validation-for="Identifier" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label">Mật khẩu</label>
+                        <input asp-for="Password" class="form-control" type="password" autocomplete="current-password" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" asp-for="RememberMe" />
+                        <label class="form-check-label" asp-for="RememberMe">Ghi nhớ đăng nhập</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Đăng nhập</button>
+                </form>
+            </div>
+            <div class="card-footer text-center"><a asp-action="Register">Chưa có tài khoản? Đăng ký</a></div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

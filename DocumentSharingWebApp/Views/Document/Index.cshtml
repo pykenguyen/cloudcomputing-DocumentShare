@@ -1,0 +1,84 @@
+﻿@model List<DocumentSharingWebApp.Models.Document>
+@using DocumentSharingWebApp.Models
+@{
+    ViewBag.Title = "Danh sách tài liệu";
+    var cats = ViewBag.Categories as IEnumerable<Category> ?? Enumerable.Empty<Category>();
+    int? selectedCat = ViewBag.CategoryId as int?;
+    string search = ViewBag.Search as string ?? "";
+}
+<div class="page-title"><i class="bi bi-files"></i><h2 class="mb-0">Danh sách tài liệu</h2></div>
+
+<div class="ds-container ds-2col">
+    <aside class="ds-side">
+        <div class="card">
+            <div class="card-header fw-semibold"><i class="bi bi-funnel"></i> Bộ lọc</div>
+            <div class="card-body">
+                <form method="get" asp-action="Index" class="vstack gap-2">
+                    <div>
+                        <label class="form-label">Từ khóa</label>
+                        <input type="text" name="search" value="@search" class="form-control" placeholder="VD: Giải tích, PL/SQL..." />
+                    </div>
+                    <div>
+                        <label class="form-label">Danh mục</label>
+                        <select name="categoryId" class="form-select">
+                            <option value="">-- Tất cả --</option>
+                            @foreach (var c in cats)
+                            {
+                                <option value="@c.CategoryId" selected="@(selectedCat == c.CategoryId)">@c.CategoryName</option>
+                            }
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i> Lọc</button>
+                </form>
+            </div>
+        </div>
+        <div class="card mt-3">
+            <div class="card-header fw-semibold"><i class="bi bi-info-circle"></i> Gợi ý</div>
+            <div class="card-body small text-muted">
+                - Tìm theo môn học, tác giả, trường, năm…<br />- Chọn danh mục để thu hẹp.
+            </div>
+        </div>
+    </aside>
+
+    <section>
+        <div class="list-toolbar mb-3">
+            <div class="text-muted">
+                @if (Model?.Any() == true)
+                {
+                    <span>Tìm thấy <strong>@Model.Count</strong> tài liệu</span>
+                    ;
+                }
+                else
+                {
+
+                    <span>Không có tài liệu phù hợp</span>
+                    ;
+                }
+            </div>
+            <div>
+                <a asp-controller="Document" asp-action="Upload" class="btn btn-success btn-sm">
+                    <i class="bi bi-cloud-upload"></i> Tải tài liệu của bạn
+                </a>
+            </div>
+        </div>
+
+        @if (Model == null || !Model.Any())
+        {
+            <div class="empty">
+                <div class="mb-2" style="font-size:2rem">📭</div>
+                Không có tài liệu nào khớp bộ lọc. Thử đổi từ khóa hoặc danh mục.
+            </div>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var d in Model)
+                {
+                    <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+                        @await Html.PartialAsync("~/Views/Shared/_DocCard.cshtml", d)
+                    </div>
+                }
+            </div>
+        }
+    </section>
+</div>

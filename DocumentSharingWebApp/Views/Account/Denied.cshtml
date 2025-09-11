@@ -1,0 +1,46 @@
+﻿@{
+    ViewBag.Title = "Từ chối truy cập";
+    Layout = "_LayoutUser";
+    var reqPath = Context?.Request?.Path.HasValue == true ? Context.Request.Path.Value : "/";
+}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="display-6 me-3"><i class="bi bi-shield-x text-danger"></i></div>
+                        <div>
+                            <h3 class="mb-1">Bạn không có quyền truy cập</h3>
+                            <div class="text-muted">Trang bạn yêu cầu: <code>@reqPath</code></div>
+                        </div>
+                    </div>
+                    @if (TempData["AccessDeniedMessage"] != null)
+                    {
+                        <div class="alert alert-warning">@TempData["AccessDeniedMessage"]</div>
+                    }
+
+                    @if (User?.Identity?.IsAuthenticated == true)
+                    {
+                        <p class="mb-4">Tài khoản đã đăng nhập nhưng không đủ quyền. Nếu đây là nhầm lẫn, vui lòng liên hệ quản trị viên.</p>
+                        <div class="d-flex gap-2">
+                            <a asp-controller="Home" asp-action="Index" class="btn btn-primary"><i class="bi bi-house-door"></i> Về trang chủ</a>
+                            <a asp-controller="User" asp-action="Profile" class="btn btn-outline-secondary"><i class="bi bi-person-circle"></i> Hồ sơ của tôi</a>
+                            <button type="button" class="btn btn-outline-dark" onclick="history.back()"><i class="bi bi-arrow-left"></i> Quay lại</button>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="mb-4">Bạn chưa đăng nhập hoặc không có quyền phù hợp.</p>
+                        <div class="d-flex gap-2">
+                            <a asp-controller="Account" asp-action="Login" class="btn btn-primary"><i class="bi bi-box-arrow-in-right"></i> Đăng nhập</a>
+                            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-house-door"></i> Về trang chủ</a>
+                            <button type="button" class="btn btn-outline-dark" onclick="history.back()"><i class="bi bi-arrow-left"></i> Quay lại</button>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="text-center text-muted small mt-3">Nếu vấn đề vẫn tiếp diễn, vui lòng liên hệ quản trị hệ thống.</div>
+        </div>
+    </div>
+</div>

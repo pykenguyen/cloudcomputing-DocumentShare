@@ -1,0 +1,157 @@
+﻿@using DocumentSharingWebApp.Models
+@{
+    ViewBag.Title = "Tải tài liệu lên";
+    var cats = (IEnumerable<Category>)(ViewBag.Categories ?? Enumerable.Empty<Category>());
+    var isLoggedIn = (bool)(ViewBag.IsLoggedIn ?? false);
+}
+<div class="page-title"><i class="bi bi-cloud-upload"></i><h3 class="mb-0">Tải tài liệu lên</h3></div>
+
+@if (TempData["GuestOk"] != null)
+{
+    <div class="alert alert-success"><i class="bi bi-check-circle"></i> @TempData["GuestOk"]</div>
+}
+@if (TempData["GuestErr"] != null)
+{
+    <div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> @TempData["GuestErr"]</div>
+}
+@if (TempData["MemberErr"] != null)
+{
+    <div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> @TempData["MemberErr"]</div>
+}
+
+<ul class="nav nav-tabs mb-3" id="uploadTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="guest-tab" data-bs-toggle="tab" data-bs-target="#guest-pane" type="button" role="tab">Khách</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        @if (isLoggedIn)
+        {
+            <button class="nav-link" id="member-tab" data-bs-toggle="tab" data-bs-target="#member-pane" type="button" role="tab">Thành viên</button>
+        }
+        else
+        {
+            <button class="nav-link disabled" id="member-tab" type="button" role="tab" aria-disabled="true" title="Đăng nhập để sử dụng">Thành viên</button>
+        }
+    </li>
+</ul>
+
+<div class="tab-content border rounded-3 p-3 bg-white" id="uploadTabsContent">
+    <div class="tab-pane fade show active" id="guest-pane" role="tabpanel" aria-labelledby="guest-tab">
+        <form asp-action="UploadGuest" method="post" enctype="multipart/form-data" onsubmit="return lockSubmit(this)">
+            @Html.AntiForgeryToken()
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="guestName">Họ tên (tuỳ chọn)</label>
+                    <input id="guestName" name="UploaderName" class="form-control" placeholder="Ví dụ: Nguyễn Văn A" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="guestEmail">Email (tuỳ chọn)</label>
+                    <input id="guestEmail" name="UploaderEmail" type="email" class="form-control" placeholder="Dùng để quản trị liên hệ khi cần" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="guestCat">Danh mục <span class="text-danger">*</span></label>
+                    <select id="guestCat" class="form-select" name="CategoryId" required>
+                        <option value="">-- chọn --</option>
+                        @foreach (var c in cats)
+                        {
+                            <option value="@c.CategoryId">@c.CategoryName</option>
+                        }
+                    </select>
+                    <div class="form-text">Chọn danh mục phù hợp để người khác dễ tìm.</div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="guestNotes">Ghi chú / mô tả ngắn</label>
+                    <textarea id="guestNotes" name="Notes" class="form-control" rows="3" placeholder="Tóm tắt nội dung, từ khoá…"></textarea>
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="guestFile">Tài liệu <span class="text-danger">*</span></label>
+                    <input id="guestFile" class="form-control file-input" type="file" name="File" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" required />
+                    <div class="form-text">Định dạng: pdf, doc, docx, ppt, pptx, txt • Tối đa 200MB.</div>
+                </div>
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="agreeGuest" required />
+                        <label class="form-check-label" for="agreeGuest">
+                            Tôi cam kết có quyền chia sẻ tài liệu này và đồng ý để quản trị duyệt/xoá nếu vi phạm.
+                        </label>
+                    </div>
+                </div>
+                <div class="col-12 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary" data-loading-text="Đang tải…">
+                        <i class="bi bi-upload"></i> Tải lên (Khách)
+                    </button>
+                    <div class="text-muted small align-self-center">
+                        Tài liệu sẽ ở trạng thái <strong>chờ duyệt</strong>.
+                        <a asp-controller="Account" asp-action="Login">Đăng nhập</a> để quản lý tài liệu dễ hơn.
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="tab-pane fade" id="member-pane" role="tabpanel" aria-labelledby="member-tab">
+        @if (!isLoggedIn)
+        {
+            <div class="alert alert-info mb-0">
+                Vui lòng <a asp-controller="Account" asp-action="Login" class="alert-link">đăng nhập</a>
+                để tải lên dưới tên thành viên và theo dõi tình trạng duyệt.
+            </div>
+        }
+        else
+        {
+            <form asp-action="UploadMember" method="post" enctype="multipart/form-data" onsubmit="return lockSubmit(this)">
+                @Html.AntiForgeryToken()
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label" for="memTitle">Tiêu đề <span class="text-danger">*</span></label>
+                        <input id="memTitle" name="Title" class="form-control" required />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="memCat">Danh mục <span class="text-danger">*</span></label>
+                        <select id="memCat" class="form-select" name="CategoryId" required>
+                            <option value="">-- chọn --</option>
+                            @foreach (var c in cats)
+                            {
+                                <option value="@c.CategoryId">@c.CategoryName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="memDesc">Mô tả ngắn</label>
+                        <textarea id="memDesc" name="Description" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="memFile">Tài liệu <span class="text-danger">*</span></label>
+                        <input id="memFile" class="form-control file-input" type="file" name="File" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" required />
+                        <div class="form-text">Định dạng: pdf, doc, docx, ppt, pptx, txt • Tối đa 200MB.</div>
+                    </div>
+                    <div class="col-12 d-flex gap-2">
+                        <button type="submit" class="btn btn-success" data-loading-text="Đang tải…">
+                            <i class="bi bi-upload"></i> Tải lên (Thành viên)
+                        </button>
+                        <span class="text-muted small align-self-center">Tài liệu vẫn cần duyệt trước khi hiển thị công khai.</span>
+                    </div>
+                </div>
+            </form>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const MAX_MB = 200, exts = ['.pdf','.doc','.docx','.ppt','.pptx','.txt'];
+        function validExt(n){ n=(n||'').toLowerCase(); return exts.some(e=>n.endsWith(e)); }
+        function validateFileInput(input){
+          const f=input.files&&input.files[0]; if(!f) return true;
+          if(!validExt(f.name)){ alert('Định dạng không được phép: '+exts.join(', ')); input.value=''; return false; }
+          if(f.size/(1024*1024)>MAX_MB){ alert('File quá lớn. Tối đa '+MAX_MB+'MB.'); input.value=''; return false; }
+          return true;
+        }
+        document.querySelectorAll('.file-input').forEach(inp=>inp.addEventListener('change',()=>validateFileInput(inp)));
+        function lockSubmit(form){
+          const file=form.querySelector('.file-input'); if(file && !validateFileInput(file)) return false;
+          const btn=form.querySelector('button[type="submit"]'); if(btn){ btn.disabled=true; btn.dataset.originalText=btn.innerHTML; btn.innerHTML='<span class="spinner-border spinner-border-sm me-1"></span>'+ (btn.getAttribute('data-loading-text')||'Đang xử lý…'); }
+          return true;
+        }
+    </script>
+}

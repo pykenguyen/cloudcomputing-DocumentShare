@@ -1,0 +1,66 @@
+﻿@model IEnumerable<DocumentSharingWebApp.Models.Document>
+@{
+    ViewBag.Title = "Tài liệu của tôi";
+}
+<div class="page-title"><i class="bi bi-folder2-open"></i><h3 class="mb-0">@ViewBag.Title</h3></div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="text-muted">Quản lý các tài liệu bạn đã tải lên</div>
+            <a asp-controller="Document" asp-action="Upload" class="btn btn-success">
+                <i class="bi bi-cloud-upload"></i> Tải lên
+            </a>
+        </div>
+
+        @if (Model == null || !Model.Any())
+        {
+            <div class="empty">
+                <div class="mb-2" style="font-size:2rem">📄</div>
+                Bạn chưa tải tài liệu nào.
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th style="width:44%">Tiêu đề</th>
+                            <th>Danh mục</th>
+                            <th class="text-center">Ngày tải</th>
+                            <th class="text-center">Trạng thái</th>
+                            <th class="text-center"><i class="bi bi-download"></i></th>
+                            <th class="text-center"><i class="bi bi-heart-fill"></i></th>
+                            <th class="text-end">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var d in Model)
+                        {
+                            <tr>
+                                <td class="text-truncate" style="max-width: 420px;">
+                                    <a asp-controller="Document" asp-action="Details" asp-route-id="@d.DocumentId" class="fw-semibold text-decoration-none">@d.Title</a>
+                                    <div class="small text-muted">@d.FileName</div>
+                                </td>
+                                <td>@(d.Category?.CategoryName ?? "—")</td>
+                                <td class="text-center">@d.UploadDate?.ToString("dd/MM/yyyy")</td>
+                                <td class="text-center">
+                                    <span class="badge @(d.Status == "Approved" ? "text-bg-success" : d.Status == "Pending" ? "text-bg-warning" : "text-bg-secondary")">@d.Status</span>
+                                </td>
+                                <td class="text-center">@((d.DownloadCount ?? 0).ToString("N0"))</td>
+                                <td class="text-center">@((d.LikeCount ?? 0).ToString("N0"))</td>
+                                <td class="text-end">
+                                    <div class="btn-group">
+                                        <a class="btn btn-sm btn-outline-primary" asp-controller="Document" asp-action="Details" asp-route-id="@d.DocumentId">Chi tiết</a>
+                                        <a class="btn btn-sm btn-outline-secondary" asp-controller="Document" asp-action="Download" asp-route-id="@d.DocumentId">Tải</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

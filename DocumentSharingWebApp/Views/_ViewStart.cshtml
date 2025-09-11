@@ -1,0 +1,15 @@
+﻿@{
+    var role = Context?.Session?.GetString("Role");
+    if (string.IsNullOrEmpty(role))
+    {
+        Layout = "~/Views/Shared/_LayoutGuest.cshtml";
+    }
+    else if (role == "User")
+    {
+        Layout = "~/Views/Shared/_LayoutUser.cshtml";
+    }
+    else if (role == "Admin")
+    {
+        Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    }
+}

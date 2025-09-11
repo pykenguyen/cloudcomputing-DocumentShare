@@ -1,0 +1,47 @@
+﻿@model List<DocumentSharingWebApp.Models.Document>
+@using DocumentSharingWebApp.Models
+@{
+    Layout = "~/Views/Shared/_LayoutUser.cshtml";
+    ViewBag.Title = "Trang chủ";
+    var cats = ViewBag?.Categories as IEnumerable<Category> ?? Enumerable.Empty<Category>();
+    string? searchVal = ViewBag?.Search as string;
+}
+
+<h5 class="fw-bold mb-2">Danh mục phổ biến</h5>
+<div class="card mb-4">
+    <div class="card-body">
+        @if (!cats.Any())
+        {
+            <div class="text-muted">Chưa có danh mục.</div>
+        }
+        else
+        {
+            <div class="d-flex flex-wrap">
+                @foreach (var cat in cats)
+                {
+                    <a asp-controller="Document" asp-action="Index" asp-route-categoryId="@cat.CategoryId"
+                       class="chip text-decoration-none">
+                        <i class="bi bi-folder-fill"></i> @cat.CategoryName
+                    </a>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<h5 class="fw-bold mb-2">📄 Tài liệu mới nhất</h5>
+@if (Model?.Any() == true)
+{
+    <div class="row g-3">
+        @foreach (var doc in Model)
+        {
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                <partial name="_DocCard" model="doc" />
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="empty">Chưa có tài liệu nào.</div>
+}

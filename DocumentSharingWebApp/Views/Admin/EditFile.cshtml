@@ -1,0 +1,67 @@
+﻿@model DocumentSharingWebApp.Models.Document
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Sửa tệp & thông tin";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Sửa tệp & thông tin</h2>
+    <a asp-action="ViewDocument" asp-route-id="@Model.DocumentId" class="btn btn-outline-secondary btn-sm">
+        ← Quay lại chi tiết
+    </a>
+</div>
+
+@if (TempData["Ok"] != null)
+{
+    <div class="alert alert-success">@TempData["Ok"]</div>
+}
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">Vui lòng kiểm tra các lỗi bên dưới.</div>
+}
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form asp-action="EditFile" asp-route-id="@Model.DocumentId" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+
+            <div class="mb-3">
+                <label class="form-label">Tiêu đề</label>
+                <input name="title" class="form-control" value="@Model.Title" />
+                <div class="form-text">Nếu để trống và thay file mới, tiêu đề sẽ lấy theo tên file.</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Mô tả</label>
+                <textarea name="description" rows="4" class="form-control">@Model.Description</textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">File hiện tại</label>
+                <div>
+                    <a href="~/uploads/@Model.FilePath" target="_blank">
+                        @Model.FileName
+                    </a>
+                    <small class="text-muted ms-2">
+                        (@((Model.FileSizeKb ?? 0).ToString("N0")) KB)
+                    </small>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Chọn file mới (tuỳ chọn)</label>
+                <input type="file" name="newFile" class="form-control"
+                       accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" />
+                @Html.ValidationMessage("newFile", new { @class = "text-danger" })
+                <div class="form-text">Để trống nếu chỉ muốn đổi tiêu đề/mô tả.</div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary" type="submit">
+                    <i class="bi bi-save"></i> Lưu thay đổi
+                </button>
+                <a asp-action="ViewDocument" asp-route-id="@Model.DocumentId" class="btn btn-secondary">Huỷ</a>
+            </div>
+        </form>
+    </div>
+</div>

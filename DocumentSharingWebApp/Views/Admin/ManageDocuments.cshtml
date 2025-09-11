@@ -1,0 +1,323 @@
+﻿@model List<DocumentSharingWebApp.Models.Document>
+@using DocumentSharingWebApp.Models
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Quản lý tài liệu";
+
+    var cats = ViewBag?.Categories as IEnumerable<Category> ?? Enumerable.Empty<Category>();
+    int? selectedCat = ViewBag?.CategoryId as int?;
+    string searchVal = ViewBag?.Search as string ?? "";
+}
+
+<style>
+    /* Chỉ cho trang này, để đảm bảo khoảng cách nút thao tác */
+    .doc-thumb {
+        width: 120px;
+        height: 80px;
+        object-fit: cover;
+        border: 1px solid #e9ecef;
+        border-radius: .5rem;
+        background: #f8f9fa;
+    }
+
+    .table-actions {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: .5rem;
+    }
+
+        .table-actions .btn {
+            margin: 0 .15rem;
+            border-radius: 10px;
+        }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="m-0">📂 Quản lý tài liệu</h2>
+    <a class="btn btn-primary" asp-action="AddDocument" asp-controller="Admin">
+        <i class="bi bi-upload"></i> Thêm tài liệu mới
+    </a>
+</div>
+
+@if (TempData["AddSuccess"] != null)
+{
+    <div class="alert alert-success"><i class="bi bi-check-circle"></i> @TempData["AddSuccess"]</div>
+}
+@if (TempData["Ok"] != null)
+{
+    <div class="alert alert-info"><i class="bi bi-info-circle"></i> @TempData["Ok"]</div>
+}
+
+<form method="get" asp-action="ManageDocuments" class="row g-2 mb-3">
+    <div class="col-md-4">
+        <input type="text" name="search" value="@searchVal" class="form-control"
+               placeholder="Tìm theo tiêu đề, mô tả, người đăng..." />
+    </div>
+    <div class="col-md-4">
+        <select name="categoryId" class="form-select">
+            <option value="">-- Tất cả danh mục --</option>
+            @foreach (var c in cats)
+            {
+                <option value="@c.CategoryId" selected="@(selectedCat == c.CategoryId)">@c.CategoryName</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Tìm kiếm</button>
+    </div>
+</form>
+
+<table class="table table-hover align-middle">
+    <thead class="table-dark text-center">
+        <tr>
+            <th style="width:140px;">Thumbnail</th>
+            <th class="text-start">Tiêu đề</th>
+            <th>Danh mục</th>
+            <th>Người đăng</th>
+            <th>Ngày đăng</th>
+            <th>Kích thước</th>
+            <th>Lượt tải</th>
+            <th>Giá tải</th>
+            <th>Trạng thái</th>
+            <th style="width:260px;">Thao tác</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model?.Any() == true)
+        {
+            foreach (var doc in Model)
+            {
+                var uploaderName = doc.IsGuestUpload
+                ? (!string.IsNullOrWhiteSpace(doc.GuestName) ? doc.GuestName : "Khách")
+                : (doc.Uploader?.Username ?? "—");
+
+                bool isAdminDoc = string.Equals(doc.Uploader?.Role, "Admin", StringComparison.OrdinalIgnoreCase);
+                var price = doc.DownloadCost ?? 0m;
+                bool isFree = !isAdminDoc || price <= 0m;
+
+                string status = doc.Status ?? "";
+                string approveUrl = Url.Action("ApproveDocument", "Admin", new { id = doc.DocumentId })!;
+                string rejectUrl = Url.Action("RejectDocument", "Admin", new { id = doc.DocumentId })!;
+                string deleteUrl = Url.Action("DeleteDocument", "Admin", new { id = doc.DocumentId })!;
+                string viewFileUrl = !string.IsNullOrEmpty(doc.FilePath) ? Url.Content("~/uploads/" + doc.FilePath) : "#";
+
+                <tr>
+                    <td class="text-center">
+                        <img class="doc-thumb" src="@Url.Action("Thumb", "Document", new { id = doc.DocumentId, w = 300 })"
+                             alt="thumb @doc.Title" loading="lazy" />
+                    </td>
+
+                    <td class="text-start">
+                        <div class="fw-semibold text-primary text-truncate" title="@doc.Title">@doc.Title</div>
+                        @if (!string.IsNullOrWhiteSpace(doc.Description))
+                        {
+                            <div class="small text-muted text-truncate" style="max-width:380px;" title="@doc.Description">
+                                @doc.Description
+                            </div>
+                        }
+                    </td>
+
+                    <td class="text-center">@((doc.Category?.CategoryName) ?? "—")</td>
+                    <td class="text-center">@uploaderName</td>
+                    <td class="text-center">@doc.UploadDate?.ToString("dd/MM/yyyy")</td>
+                    <td class="text-center">@((doc.FileSizeKb ?? 0).ToString("N0")) KB</td>
+                    <td class="text-center">@((doc.DownloadCount ?? 0).ToString("N0"))</td>
+                    <td class="text-center">@(isFree ? "Miễn phí" : $"{price:0} xu")</td>
+                    <td class="text-center">
+                        @if (status == "Pending")
+                        {
+                            <span class="badge bg-warning text-dark">Chờ duyệt</span>
+                        }
+                        else if (status == "Approved")
+                        {
+
+                            <span class="badge bg-success">Đã duyệt</span>
+                        }
+                        else if (status == "Rejected")
+                        {
+
+                            <span class="badge bg-danger">Từ chối</span>
+                        }
+                        else
+                        {
+
+                            <span class="badge bg-secondary">@status</span>
+                        }
+                    </td>
+
+                    <td class="text-center">
+                        <div class="table-actions">
+                            <!-- Chi tiết -->
+                            <a asp-action="ViewDocument" asp-route-id="@doc.DocumentId"
+                               class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip" data-bs-title="Chi tiết">
+                                <i class="bi bi-file-earmark-text"></i>
+                            </a>
+
+                            <!-- Xem file (khi đã duyệt) -->
+                            @if (status == "Approved" && !string.IsNullOrEmpty(doc.FilePath))
+                            {
+                                <a href="@viewFileUrl" target="_blank" class="btn btn-sm btn-outline-primary"
+                                   data-bs-toggle="tooltip" data-bs-title="Mở tệp">
+                                    <i class="bi bi-box-arrow-up-right"></i>
+                                </a>
+                            }
+
+                            <!-- Duyệt / Từ chối (khi đang pending) -->
+                            @if (status == "Pending")
+                            {
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-success"
+                                        data-bs-toggle="modal" data-bs-target="#approveModal"
+                                        data-doc-title="@doc.Title"
+                                        data-url="@approveUrl">
+                                    <i class="bi bi-check2-circle"></i>
+                                </button>
+
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-warning"
+                                        data-bs-toggle="modal" data-bs-target="#rejectModal"
+                                        data-doc-title="@doc.Title"
+                                        data-url="@rejectUrl">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            }
+
+                            <!-- Làm mới thumbnail -->
+                            <form asp-action="ClearThumb" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@doc.DocumentId" />
+                                <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                        data-bs-toggle="tooltip" data-bs-title="Làm mới thumbnail">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </button>
+                            </form>
+
+                            <!-- Xoá -->
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-danger"
+                                    data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                    data-doc-title="@doc.Title"
+                                    data-url="@deleteUrl">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr><td colspan="10" class="text-center text-muted">Không có tài liệu.</td></tr>
+        }
+    </tbody>
+</table>
+
+<!-- Modal DUYỆT -->
+<div class="modal fade" id="approveModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title"><i class="bi bi-check2-circle text-success me-1"></i> Duyệt tài liệu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                Xác nhận duyệt tài liệu: <strong id="approve-doc-title">—</strong>?
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Huỷ</button>
+                <a id="approve-confirm-link" class="btn btn-success" href="#"><i class="bi bi-check2"></i> Duyệt</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal TỪ CHỐI -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title"><i class="bi bi-x-circle text-warning me-1"></i> Từ chối tài liệu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                Xác nhận từ chối tài liệu: <strong id="reject-doc-title">—</strong>?
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Huỷ</button>
+                <a id="reject-confirm-link" class="btn btn-warning" href="#"><i class="bi bi-x"></i> Từ chối</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal XOÁ -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title"><i class="bi bi-trash text-danger me-1"></i> Xoá tài liệu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                Bạn chắc chắn muốn xoá: <strong id="delete-doc-title">—</strong>?<br />
+                <span class="small text-danger">Hành động này không thể hoàn tác.</span>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Huỷ</button>
+                <a id="delete-confirm-link" class="btn btn-danger" href="#"><i class="bi bi-trash"></i> Xoá</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+          // Tooltips
+          const tEls = Array.prototype.slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+          tEls.forEach(function (el) { new bootstrap.Tooltip(el) });
+
+          // Approve
+          const approveModal = document.getElementById('approveModal');
+          if (approveModal){
+            approveModal.addEventListener('show.bs.modal', (e) => {
+              const btn = e.relatedTarget;
+              if (!btn) return;
+              const title = btn.getAttribute('data-doc-title') || '—';
+              const url   = btn.getAttribute('data-url') || '#';
+              approveModal.querySelector('#approve-doc-title').textContent = title;
+              approveModal.querySelector('#approve-confirm-link').setAttribute('href', url);
+            });
+          }
+
+          // Reject
+          const rejectModal = document.getElementById('rejectModal');
+          if (rejectModal){
+            rejectModal.addEventListener('show.bs.modal', (e) => {
+              const btn = e.relatedTarget;
+              if (!btn) return;
+              const title = btn.getAttribute('data-doc-title') || '—';
+              const url   = btn.getAttribute('data-url') || '#';
+              rejectModal.querySelector('#reject-doc-title').textContent = title;
+              rejectModal.querySelector('#reject-confirm-link').setAttribute('href', url);
+            });
+          }
+
+          // Delete
+          const deleteModal = document.getElementById('deleteModal');
+          if (deleteModal){
+            deleteModal.addEventListener('show.bs.modal', (e) => {
+              const btn = e.relatedTarget;
+              if (!btn) return;
+              const title = btn.getAttribute('data-doc-title') || '—';
+              const url   = btn.getAttribute('data-url') || '#';
+              deleteModal.querySelector('#delete-doc-title').textContent = title;
+              deleteModal.querySelector('#delete-confirm-link').setAttribute('href', url);
+            });
+          }
+        })();
+    </script>
+}

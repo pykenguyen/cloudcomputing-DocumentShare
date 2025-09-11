@@ -1,0 +1,147 @@
+﻿@model List<DocumentSharingWebApp.Models.Comment>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Quản lý bình luận";
+    string search = ViewBag?.Search as string ?? "";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="m-0">💬 Quản lý bình luận</h2>
+</div>
+
+<form method="get" asp-action="ManageComments" class="row g-2 mb-3">
+    <div class="col-md-6">
+        <input type="text" name="search" value="@search" class="form-control"
+               placeholder="Tìm theo nội dung, người bình luận, tài liệu..." />
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Tìm</button>
+    </div>
+</form>
+
+<table class="table table-hover align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th style="width:90px" class="text-center">ID</th>
+            <th>Tài liệu</th>
+            <th style="width:180px">Người bình luận</th>
+            <th>Nội dung</th>
+            <th style="width:180px" class="text-center">Thời gian</th>
+            <th style="width:160px" class="text-center">Thao tác</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model?.Any() == true)
+        {
+            foreach (var c in Model)
+            {
+                var docTitle = c.Document?.Title ?? "(tài liệu đã xoá?)";
+                var userName = c.User?.Username ?? "—";
+                var docId = c.DocumentId; // nếu không có, đổi sang c.Document?.DocumentId
+
+                <tr>
+                    <td class="text-center">@c.CommentId</td>
+                    <td class="text-break">@docTitle</td>
+                    <td>@userName</td>
+                    <td class="text-break">@c.Content</td>
+                    <td class="text-center">@c.CommentDate?.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td class="text-center">
+                        <div class="table-actions">
+                            @* khoảng cách giữa các nút *@
+                            <!-- Xem tài liệu -->
+                            <a asp-action="ViewDocument" asp-controller="Admin" asp-route-id="@docId"
+                               class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" data-bs-title="Xem tài liệu">
+                                <i class="bi bi-eye"></i>
+                            </a>
+
+                            <!-- Xoá (mở modal xác nhận) -->
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-danger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#confirmDeleteCommentModal"
+                                    data-id="@c.CommentId"
+                                    data-user="@userName"
+                                    data-doc="@docTitle"
+                                    data-time="@c.CommentDate?.ToString("dd/MM/yyyy HH:mm")"
+                                    data-content="@c.Content">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr><td colspan="6" class="text-center text-muted">Không có bình luận.</td></tr>
+        }
+    </tbody>
+</table>
+
+@* Modal xác nhận xoá *@
+<div class="modal fade" id="confirmDeleteCommentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle text-danger me-1"></i> Xoá bình luận</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <div class="small text-muted">Bạn sắp xoá bình luận:</div>
+                <ul class="list-unstyled mb-2 small">
+                    <li><strong>ID:</strong> <span id="del-cmt-id">—</span></li>
+                    <li><strong>Người bình luận:</strong> <span id="del-cmt-user">—</span></li>
+                    <li><strong>Tài liệu:</strong> <span id="del-cmt-doc">—</span></li>
+                    <li><strong>Thời gian:</strong> <span id="del-cmt-time">—</span></li>
+                </ul>
+                <div class="border rounded p-2 bg-light small" id="del-cmt-content">—</div>
+                <div class="mt-2 text-danger small">Hành động này không thể hoàn tác.</div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Huỷ</button>
+                <form id="del-cmt-form" asp-action="DeleteComment" asp-controller="Admin" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="del-cmt-input-id" />
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Xoá
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+          // Tooltip
+          const tooltipTriggerList = Array.prototype.slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+          tooltipTriggerList.forEach(function (el) { new bootstrap.Tooltip(el) });
+
+          // Modal fill
+          const modalEl = document.getElementById('confirmDeleteCommentModal');
+          if (!modalEl) return;
+
+          modalEl.addEventListener('show.bs.modal', (event) => {
+            const btn = event.relatedTarget;
+            if (!btn) return;
+
+            const id = btn.getAttribute('data-id') || '';
+            const user = btn.getAttribute('data-user') || '—';
+            const doc = btn.getAttribute('data-doc') || '—';
+            const time = btn.getAttribute('data-time') || '—';
+            const content = btn.getAttribute('data-content') || '—';
+
+            modalEl.querySelector('#del-cmt-id').textContent = id;
+            modalEl.querySelector('#del-cmt-user').textContent = user;
+            modalEl.querySelector('#del-cmt-doc').textContent = doc;
+            modalEl.querySelector('#del-cmt-time').textContent = time;
+            modalEl.querySelector('#del-cmt-content').textContent = content;
+
+            const hiddenInput = modalEl.querySelector('#del-cmt-input-id');
+            if (hiddenInput) hiddenInput.value = id;
+          });
+        })();
+    </script>
+}

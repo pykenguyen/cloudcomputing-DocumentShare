@@ -1,0 +1,71 @@
+﻿@model DocumentSharingWebApp.Models.Document
+@using System
+
+@{
+    var title = Model?.Title ?? "(Không có tiêu đề)";
+    var desc = Model?.Description ?? "";
+    var cat = Model?.Category?.CategoryName ?? "";
+    var isGuest = Model?.IsGuestUpload ?? true;
+
+    var uploaderName = isGuest
+        ? (!string.IsNullOrWhiteSpace(Model?.GuestName) ? Model!.GuestName : "Khách")
+        : (Model?.Uploader?.Username ?? "—");
+
+    bool isAdminDoc = string.Equals(Model?.Uploader?.Role, "Admin", StringComparison.OrdinalIgnoreCase);
+    var price = Model?.DownloadCost ?? 0m;
+    bool isFree = !isAdminDoc || price <= 0m;
+
+    var uploadAt = Model?.UploadDate?.ToString("dd/MM/yyyy") ?? "";
+    var downloads = (Model?.DownloadCount ?? 0).ToString("N0");
+    var likes = (Model?.LikeCount ?? 0).ToString("N0");
+}
+
+<div class="card doc-card card-hover h-100">
+    <a asp-controller="Document" asp-action="Details" asp-route-id="@Model?.DocumentId" class="text-decoration-none">
+        <img class="card-img-top"
+             src="@Url.Action("Thumb", "Document", new { id = Model?.DocumentId, w = 600 })"
+             alt="thumb @title" loading="lazy" />
+    </a>
+
+    <div class="card-body d-flex flex-column">
+        <div class="d-flex align-items-start justify-content-between gap-2">
+            <h6 class="title truncate-2 mb-1" title="@title">
+                <a asp-controller="Document" asp-action="Details" asp-route-id="@Model?.DocumentId" class="stretched-link text-reset text-decoration-none">@title</a>
+            </h6>
+            <div class="text-nowrap">
+                @if (isFree)
+                {
+                    <span class="badge badge-free">Miễn phí</span>
+                }
+                else
+                {
+
+                    <span class="badge badge-paid">@price.ToString("0") xu</span>
+                }
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(cat))
+        {
+            <div class="mb-2"><span class="badge badge-ghost">@cat</span></div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(desc))
+        {
+            <div class="text-muted truncate-2" title="@desc">@desc</div>
+        }
+
+        <div class="text-muted mt-2" style="font-size:.92rem;">
+            <i class="bi bi-person"></i> @uploaderName
+            @if (!string.IsNullOrEmpty(uploadAt))
+            {
+                <span class="ms-2"><i class="bi bi-calendar"></i> @uploadAt</span>
+            }
+        </div>
+    </div>
+
+    <div class="card-footer d-flex justify-content-between small">
+        <span class="text-muted"><i class="bi bi-heart-fill"></i> @likes</span>
+        <span class="text-muted"><i class="bi bi-download"></i> @downloads</span>
+    </div>
+</div>

@@ -1,0 +1,131 @@
+﻿@model DocumentSharingWebApp.ViewModels.ProfileVM
+@{
+    ViewBag.Title = "Hồ sơ của tôi";
+}
+<div class="page-title"><i class="bi bi-person-circle"></i><h3 class="mb-0">Hồ sơ</h3></div>
+
+@if (TempData["ProfileMsg"] != null)
+{
+    <div class="alert alert-info">@TempData["ProfileMsg"]</div>
+}
+@if (TempData["PwdMsg"] != null)
+{
+    <div class="alert alert-info">@TempData["PwdMsg"]</div>
+}
+
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Thông tin tài khoản</h5>
+                <p><strong>Tên đăng nhập:</strong> @Model.Username</p>
+                <p><strong>Quyền:</strong> @Model.Role</p>
+                <p><strong>Ngày tham gia:</strong> @Model.RegistrationDate?.ToString("dd/MM/yyyy")</p>
+                <p><strong>Số dư xu:</strong> <span class="text-primary fw-bold">@Model.Coins.ToString("0")</span></p>
+                <a class="btn btn-outline-primary" asp-controller="Document" asp-action="Wallet"><i class="bi bi-coin"></i> Ví xu</a>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Cập nhật thông tin</h5>
+                <form asp-action="UpdateProfile" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-2">
+                        <label class="form-label">Email</label>
+                        <input name="Email" value="@Model.Email" class="form-control" type="email" required />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Họ tên</label>
+                        <input name="FullName" value="@Model.FullName" class="form-control" />
+                    </div>
+                    <button class="btn btn-primary" type="submit">Lưu</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Đổi mật khẩu</h5>
+                <form asp-action="ChangePassword" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-2">
+                        <label class="form-label">Mật khẩu hiện tại</label>
+                        <input name="CurrentPassword" type="password" class="form-control" required />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Mật khẩu mới</label>
+                        <input name="NewPassword" type="password" class="form-control" required minlength="6" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Xác nhận mật khẩu mới</label>
+                        <input name="ConfirmNewPassword" type="password" class="form-control" required />
+                    </div>
+                    <button class="btn btn-warning" type="submit">Đổi mật khẩu</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Tài liệu đã mua</h5>
+                @if (Model.Purchases.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead><tr><th>Tiêu đề</th><th>Giá</th><th>Ngày mua</th><th></th></tr></thead>
+                            <tbody>
+                                @foreach (var p in Model.Purchases)
+                                {
+                                    <tr>
+                                        <td class="text-truncate" style="max-width:340px">@p.Document?.Title</td>
+                                        <td>@p.Price.ToString("0") xu</td>
+                                        <td>@p.PurchasedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td><a asp-controller="Document" asp-action="Details" asp-route-id="@p.DocumentId" class="btn btn-sm btn-outline-primary">Xem</a></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+
+                    <div class="text-muted">Chưa có giao dịch mua.</div>
+                }
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Tài liệu của tôi</h5>
+                @if (Model.MyDocuments.Any())
+                {
+                    <ul class="list-group">
+                        @foreach (var d in Model.MyDocuments)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="text-truncate" style="max-width:70%">
+                                    <a asp-controller="Document" asp-action="Details" asp-route-id="@d.DocumentId">@d.Title</a>
+                                    <div class="small text-muted">@d.UploadDate?.ToString("dd/MM/yyyy") • @d.Status</div>
+                                </div>
+                                <span class="badge bg-light text-dark">
+                                    <i class="bi bi-heart-fill text-danger"></i> @(d.LikeCount ?? 0)
+                                    &nbsp;•&nbsp;
+                                    <i class="bi bi-download"></i> @(d.DownloadCount ?? 0)
+                                </span>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+
+                    <div class="text-muted">Bạn chưa tải lên tài liệu nào.</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,176 @@
+﻿@model List<DocumentSharingWebApp.Models.User>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Quản lý người dùng";
+}
+
+<style>
+    /* Spacing & look cho cột thao tác */
+    .table-actions {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: .5rem;
+    }
+
+        .table-actions .btn {
+            margin: 0 .15rem; /* fallback nếu browser không hỗ trợ gap */
+            border-radius: 10px;
+        }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="m-0">👥 Quản lý người dùng</h2>
+</div>
+
+@if (TempData["UserOk"] != null)
+{
+    <div class="alert alert-success">@TempData["UserOk"]</div>
+}
+@if (TempData["UserErr"] != null)
+{
+    <div class="alert alert-danger">@TempData["UserErr"]</div>
+}
+
+<table class="table table-hover align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th style="width:80px" class="text-center">ID</th>
+            <th>Tên đăng nhập</th>
+            <th>Họ tên</th>
+            <th>Email</th>
+            <th style="width:120px" class="text-center">Vai trò</th>
+            <th style="width:130px" class="text-center">Ngày đăng ký</th>
+            <th style="width:110px" class="text-center">Số dư (xu)</th>
+            <th style="width:170px" class="text-center">Thao tác</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model?.Any() == true)
+        {
+            foreach (var u in Model)
+            {
+                var role = u.Role ?? "User";
+                bool isAdmin = string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase);
+                var fullName = string.IsNullOrWhiteSpace(u.FullName) ? "—" : u.FullName;
+                var regAt = u.RegistrationDate?.ToString("dd/MM/yyyy") ?? "—";
+                var coins = (u.VirtualCurrency ?? 0m).ToString("0");
+
+                <tr>
+                    <td class="text-center">@u.UserId</td>
+                    <td>@u.Username</td>
+                    <td>@fullName</td>
+                    <td>@u.Email</td>
+                    <td class="text-center">
+                        @if (isAdmin)
+                        {
+                            <span class="badge bg-primary">Admin</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">User</span>
+                        }
+                    </td>
+                    <td class="text-center">@regAt</td>
+                    <td class="text-center">@coins</td>
+                    <td class="text-center">
+                        <div class="table-actions">
+                            @* Xoá: dùng modal (không dùng confirm) *@
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-danger"
+                                    data-bs-toggle="tooltip"
+                                    data-bs-title="Xoá người dùng"
+                                    data-bs-toggle-second="modal"
+                                    data-bs-target="#deleteUserModal"
+                                    data-id="@u.UserId"
+                                    data-username="@u.Username"
+                                    data-fullname="@fullName"
+                                    data-email="@u.Email"
+                                    data-coins="@coins"
+                                    @(isAdmin ? "disabled" : null)>
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr><td colspan="8" class="text-center text-muted">Không có người dùng.</td></tr>
+        }
+    </tbody>
+</table>
+
+@* Modal xác nhận xoá *@
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle text-danger me-1"></i>
+                    Xoá người dùng
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <div class="small text-muted mb-2">Bạn sắp xoá người dùng sau:</div>
+                <ul class="list-unstyled small mb-2">
+                    <li><strong>ID:</strong> <span id="del-user-id">—</span></li>
+                    <li><strong>Tên đăng nhập:</strong> <span id="del-user-username">—</span></li>
+                    <li><strong>Họ tên:</strong> <span id="del-user-fullname">—</span></li>
+                    <li><strong>Email:</strong> <span id="del-user-email">—</span></li>
+                    <li><strong>Số dư:</strong> <span id="del-user-coins">0</span> xu</li>
+                </ul>
+                <div class="text-danger small">Hành động này không thể hoàn tác.</div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Huỷ</button>
+                <form id="del-user-form" asp-action="DeleteUser" asp-controller="Admin" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="del-user-input-id" />
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Xoá
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+          // Kích hoạt tooltip
+          const tipEls = Array.prototype.slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+          tipEls.forEach(function (el) { new bootstrap.Tooltip(el) });
+
+          // Do Bootstrap mặc định không hiểu data-bs-toggle trùng 2 lần,
+          // ta gắn listener cho modal bằng attribute data-bs-target
+          const modalEl = document.getElementById('deleteUserModal');
+          if (!modalEl) return;
+
+          // Bắt sự kiện "show" để đổ dữ liệu vào modal
+          modalEl.addEventListener('show.bs.modal', (event) => {
+            const btn = event.relatedTarget;
+            if (!btn) return;
+
+            const id = btn.getAttribute('data-id') || '';
+            const username = btn.getAttribute('data-username') || '—';
+            const fullname = btn.getAttribute('data-fullname') || '—';
+            const email = btn.getAttribute('data-email') || '—';
+            const coins = btn.getAttribute('data-coins') || '0';
+
+            modalEl.querySelector('#del-user-id').textContent = id;
+            modalEl.querySelector('#del-user-username').textContent = username;
+            modalEl.querySelector('#del-user-fullname').textContent = fullname;
+            modalEl.querySelector('#del-user-email').textContent = email;
+            modalEl.querySelector('#del-user-coins').textContent = coins;
+
+            const hiddenInput = modalEl.querySelector('#del-user-input-id');
+            if (hiddenInput) hiddenInput.value = id;
+          });
+        })();
+    </script>
+}

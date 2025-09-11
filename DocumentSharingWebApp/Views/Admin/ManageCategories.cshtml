@@ -1,0 +1,154 @@
+﻿@model List<DocumentSharingWebApp.Models.Category>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Quản lý danh mục";
+}
+
+<style>
+    /* Spacing & look cho cột thao tác */
+    .table-actions {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: .5rem;
+    }
+
+        .table-actions .btn {
+            margin: 0 .15rem; /* fallback nếu browser không hỗ trợ gap */
+            border-radius: 10px;
+        }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="m-0">📁 Quản lý danh mục</h2>
+</div>
+
+@if (TempData["CatOk"] != null)
+{
+    <div class="alert alert-success">@TempData["CatOk"]</div>
+}
+@if (TempData["CatErr"] != null)
+{
+    <div class="alert alert-danger">@TempData["CatErr"]</div>
+}
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="post" asp-action="CreateCategory" class="row g-2">
+            @Html.AntiForgeryToken()
+            <div class="col-md-6">
+                <input type="text" name="categoryName" class="form-control" placeholder="Tên danh mục mới..." required />
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-plus-circle"></i> Thêm danh mục
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<table class="table table-hover align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th style="width: 80px" class="text-center">ID</th>
+            <th>Tên danh mục</th>
+            <th style="width: 200px" class="text-center">Thao tác</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model?.Any() == true)
+        {
+            foreach (var c in Model)
+            {
+                <tr>
+                    <td class="text-center">@c.CategoryId</td>
+                    <td>@c.CategoryName</td>
+                    <td class="text-center">
+                        <div class="table-actions">
+                            <!-- Xem tài liệu thuộc danh mục này (lọc theo categoryId) -->
+                            <a asp-controller="Admin" asp-action="ManageDocuments" asp-route-categoryId="@c.CategoryId"
+                               class="btn btn-sm btn-outline-secondary"
+                               data-bs-toggle="tooltip" data-bs-title="Xem tài liệu">
+                                <i class="bi bi-eye"></i>
+                            </a>
+
+                            <!-- Xoá danh mục (mở modal xác nhận) -->
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-danger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#deleteCategoryModal"
+                                    data-id="@c.CategoryId"
+                                    data-name="@c.CategoryName">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr><td colspan="3" class="text-center text-muted">Chưa có danh mục.</td></tr>
+        }
+    </tbody>
+</table>
+
+@* Modal xác nhận xoá *@
+<div class="modal fade" id="deleteCategoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title"><i class="bi bi-trash text-danger me-1"></i> Xoá danh mục</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <div class="small text-muted mb-2">Bạn sắp xoá danh mục:</div>
+                <ul class="list-unstyled small mb-2">
+                    <li><strong>ID:</strong> <span id="del-cat-id">—</span></li>
+                    <li><strong>Tên:</strong> <span id="del-cat-name">—</span></li>
+                </ul>
+                <div class="text-danger small">Chỉ xoá khi danh mục không được sử dụng. Hành động này không thể hoàn tác.</div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Huỷ</button>
+                <form id="del-cat-form" method="post" asp-action="DeleteCategory" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="del-cat-input-id" />
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Xoá
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+          // Tooltip
+          const tips = Array.prototype.slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+          tips.forEach(function (el) { new bootstrap.Tooltip(el) });
+
+          // Modal fill
+          const modalEl = document.getElementById('deleteCategoryModal');
+          if (!modalEl) return;
+
+          modalEl.addEventListener('show.bs.modal', (event) => {
+            const btn = event.relatedTarget;
+            if (!btn) return;
+
+            const id = btn.getAttribute('data-id') || '';
+            const name = btn.getAttribute('data-name') || '—';
+
+            modalEl.querySelector('#del-cat-id').textContent = id;
+            modalEl.querySelector('#del-cat-name').textContent = name;
+
+            const hidden = modalEl.querySelector('#del-cat-input-id');
+            if (hidden) hidden.value = id;
+          });
+        })();
+    </script>
+}
